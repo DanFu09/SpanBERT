@@ -58,6 +58,9 @@ class InputFeatures(object):
 class DataProcessor(object):
     """Processor for the TACRED data set."""
 
+    def __init__(self, args):
+        self.args = args
+
     @classmethod
     def _read_json(cls, input_file):
         with open(input_file, "r", encoding='utf-8') as reader:
@@ -67,17 +70,17 @@ class DataProcessor(object):
     def get_train_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_json(os.path.join(data_dir, "train.json")), "train")
+            self._read_json(os.path.join(data_dir, self.args.train_file)), "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_json(os.path.join(data_dir, "dev.json")), "dev")
+            self._read_json(os.path.join(data_dir, self.args.dev_file)), "dev")
 
     def get_test_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_json(os.path.join(data_dir, "test.json")), "test")
+            self._read_json(os.path.join(data_dir, self.args.test_file)), "test")
 
     def get_labels(self, data_dir, negative_label="no_relation"):
         """See base class."""
@@ -325,7 +328,7 @@ def main(args):
     logger.info("device: {}, n_gpu: {}, 16-bits training: {}".format(
         device, n_gpu, args.fp16))
 
-    processor = DataProcessor()
+    processor = DataProcessor(args)
     label_list = processor.get_labels(args.data_dir, args.negative_label)
     label2id = {label: i for i, label in enumerate(label_list)}
     id2label = {i: label for i, label in enumerate(label_list)}
@@ -565,5 +568,8 @@ if __name__ == "__main__":
                         help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n"
                              "0 (default value): dynamic loss scaling.\n"
                              "Positive power of 2: static loss scaling value.\n")
+    parser.add_argument("--train_file", type=str, default="train.json")
+    parser.add_argument("--dev_file", type=str, default="dev.json")
+    parser.add_argument("--test_file", type=str, default="test.json")
     args = parser.parse_args()
     main(args)
